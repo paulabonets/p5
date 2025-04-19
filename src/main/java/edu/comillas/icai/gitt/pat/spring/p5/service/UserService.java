@@ -5,6 +5,7 @@ import edu.comillas.icai.gitt.pat.spring.p5.entity.Token;
 import edu.comillas.icai.gitt.pat.spring.p5.model.ProfileRequest;
 import edu.comillas.icai.gitt.pat.spring.p5.model.ProfileResponse;
 import edu.comillas.icai.gitt.pat.spring.p5.model.RegisterRequest;
+import edu.comillas.icai.gitt.pat.spring.p5.model.Role;
 import edu.comillas.icai.gitt.pat.spring.p5.repository.TokenRepository;
 import edu.comillas.icai.gitt.pat.spring.p5.repository.AppUserRepository;
 import edu.comillas.icai.gitt.pat.spring.p5.util.Hashing;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * TODO#6
@@ -23,38 +25,82 @@ import java.util.Optional;
 
 @Service
 public class UserService implements UserServiceInterface {
+    @Autowired
+    private AppUserRepository appUserRepository;
 
+    @Autowired
+    private TokenRepository tokenRepository;
+
+    @Override
     public Token login(String email, String password) {
-        AppUser appUser = null;
-        if (appUser == null) return null;
+        Optional<AppUser> userOpt = appUserRepository.findByEmail(email);
+        if (userOpt.isEmpty()) return null;
 
-        Token token = null;
-        if (token != null) return token;
+        AppUser user = userOpt.get();
 
-        token = new Token();
-        return null;
+        if (!user.getPassword().equals(password)) return null;
+
+        Token token = new Token();
+        token.setId(UUID.randomUUID().toString());
+        token.setAppUser(user);
+        tokenRepository.save(token);
+
+        return token;
     }
 
+
+    @Override
     public AppUser authentication(String tokenId) {
-        return null;
+        return tokenRepository.findById(tokenId)
+                .map(Token::getAppUser)
+                .orElse(null);
     }
 
+
+    @Override
     public ProfileResponse profile(AppUser appUser) {
-        return null;
+        return new ProfileResponse(
+                appUser.getEmail(),
+                appUser.getName(),
+                appUser.getRole()
+        );
     }
+
+    @Override
     public ProfileResponse profile(AppUser appUser, ProfileRequest profile) {
-        return null;
+        if (StringUtils.hasText(profile.name())) {
+            appUser.setName(profile.name());
+        }
+        if (StringUtils.hasText(profile.password())) {
+            appUser.setPassword(profile.password());
+        }
+
+        appUserRepository.save(appUser);
+
+        return profile(appUser);
     }
+
+    @Override
     public ProfileResponse profile(RegisterRequest register) {
-        return null;
+        AppUser appUser = new AppUser();
+        appUser.setEmail(register.email());
+        appUser.setPassword(register.password());
+        appUser.setName(register.name());
+        appUser.setRole(Role.USER);
+
+        appUserRepository.save(appUser);
+
+        return profile(appUser);
     }
 
+    @Override
     public void logout(String tokenId) {
-
+        tokenRepository.deleteById(tokenId);
     }
 
+    @Override
     public void delete(AppUser appUser) {
-
+        appUserRepository.delete(appUser);
     }
 
 }

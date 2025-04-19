@@ -15,6 +15,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+
 @WebMvcTest(UserController.class)
 class UserControllerIntegrationTest {
 
@@ -55,10 +59,20 @@ class UserControllerIntegrationTest {
      */
     @Test void registerInvalidPassword() throws Exception {
         // Given ...
+        String json = """
+        {
+            "name": "Usuario",
+            "email": "usuario@email.com",
+            "role": "USER",
+            "password": "123"  // muy inseguro, no cumple el patrón
+        }
+        """;
 
-        // When ...
-
-                // Then ...
-
+        // When & Then ...
+        mockMvc.perform(post("/api/users")
+                        .contentType("application/json")
+                        .content(json))
+                .andExpect(status().isBadRequest());
     }
+
 }

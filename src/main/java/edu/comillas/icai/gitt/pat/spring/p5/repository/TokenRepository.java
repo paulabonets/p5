@@ -4,6 +4,8 @@ import edu.comillas.icai.gitt.pat.spring.p5.entity.AppUser;
 import edu.comillas.icai.gitt.pat.spring.p5.entity.Token;
 import org.springframework.data.repository.CrudRepository;
 
+import java.util.Optional;
+
 /**
  * TODO#5
  * Crea el repositorio para la entidad Token de modo que,
@@ -12,5 +14,5 @@ import org.springframework.data.repository.CrudRepository;
  */
 
 public interface TokenRepository extends CrudRepository<Token, String> {
-
+    Optional<Token> findByAppUser(AppUser appUser);
 }

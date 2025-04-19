@@ -44,7 +44,7 @@ public class UserController {
         Token token = userService.login(credentials.email(), credentials.password());
         if (token == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         ResponseCookie session = ResponseCookie
-                .from("session", token.id)
+                .from("session", token.getId())
                 .httpOnly(true)
                 .path("/")
                 .sameSite("Strict")
