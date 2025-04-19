@@ -10,7 +10,7 @@ a los usuarios leer, modificar y borrar sus datos. También existe un endpoint p
 
 | Método | Ruta | Descripción | Respuestas |
 |--------|------|-------------|------------|
-|        |      |             |            |
+| POST       |      |             |            |
 |        |      |             |            |
 |        |      |             |            |
 |        |      |             |            |
