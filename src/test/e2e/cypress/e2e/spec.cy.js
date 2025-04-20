@@ -23,6 +23,16 @@ describe('Registro y login', () => {
   // verificar que se realiza el login correctamente con el usuario
   // previamente registrado
   it('Login correcto', () => {
+    cy.visit('/login.html')
 
+    cy.get('input[name=email]').type('paula@http.com')
+    cy.get('input[name=password]').type('Ab123456')
+
+    cy.contains('Entrar').click()
+
+    // Comprobamos que el usuario ha sido autenticado y navega a su perfil
+    cy.url().should('include', '/profile.html')
+    cy.contains('paula@http.com') // o lo que renderice como nombre/email
   })
+
 })

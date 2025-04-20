@@ -15,6 +15,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
@@ -27,7 +30,8 @@ class P5ApplicationE2ETest {
     @Autowired
     TestRestTemplate client;
 
-    @Test public void registerTest() {
+    @Test
+    public void registerTest() {
         // Given ...
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -45,9 +49,9 @@ class P5ApplicationE2ETest {
         // Then ...
         Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode());
         Assertions.assertEquals("{" +
-                "\"name\":\"" + NAME + "\"," +
-                "\"email\":\"" + EMAIL + "\"," +
-                "\"role\":\"" + Role.USER + "\"}",
+                        "\"name\":\"" + NAME + "\"," +
+                        "\"email\":\"" + EMAIL + "\"," +
+                        "\"role\":\"" + Role.USER + "\"}",
                 response.getBody());
     }
 
@@ -56,13 +60,43 @@ class P5ApplicationE2ETest {
      * Completa el siguiente test E2E para que verifique la
      * respuesta de login cuando se proporcionan credenciales correctas
      */
-    @Test public void loginOkTest() {
-        // Given ...
+    @Test
+    public void loginOkTest() {
+        // Given: el usuario ya debe estar registrado
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        // When ...
 
+        String registerBody = """
+        {
+            "name": "Paula",
+            "email": "paula@login.com",
+            "role": "USER",
+            "password": "Ab123456"
+        }
+        """;
 
-        // Then ...
+        client.postForEntity("http://localhost:8080/api/users", new HttpEntity<>(registerBody, headers), String.class);
 
+        // When: login con credenciales correctas
+        String loginBody = """
+        {
+            "email": "paula@login.com",
+            "password": "Ab123456"
+        }
+        """;
+
+        ResponseEntity<String> response = client.postForEntity(
+                "http://localhost:8080/api/users/me/session",
+                new HttpEntity<>(loginBody, headers),
+                String.class
+        );
+
+        // Then: debe ser 200 OK y contener la cookie de sesión
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assertions.assertTrue(response.getHeaders().get("Set-Cookie")
+                .stream().anyMatch(cookie -> cookie.contains("session")));
     }
+
+
 }

@@ -31,6 +31,10 @@ public class UserService implements UserServiceInterface {
     @Autowired
     private TokenRepository tokenRepository;
 
+    @Autowired
+    private Hashing hashing;
+
+
     @Override
     public Token login(String email, String password) {
         Optional<AppUser> userOpt = appUserRepository.findByEmail(email);
@@ -38,7 +42,7 @@ public class UserService implements UserServiceInterface {
 
         AppUser user = userOpt.get();
 
-        if (!user.getPassword().equals(password)) return null;
+        if (!hashing.check(password, user.getPassword())) return null;
 
         Token token = new Token();
         token.setId(UUID.randomUUID().toString());
@@ -84,7 +88,7 @@ public class UserService implements UserServiceInterface {
     public ProfileResponse profile(RegisterRequest register) {
         AppUser appUser = new AppUser();
         appUser.setEmail(register.email());
-        appUser.setPassword(register.password());
+        appUser.setPassword(hashing.hash(register.password()));
         appUser.setName(register.name());
         appUser.setRole(Role.USER);
 

@@ -1,13 +1,9 @@
 package edu.comillas.icai.gitt.pat.spring.p5.util;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.server.ResponseStatusException;
-
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import java.security.SecureRandom;
-import java.security.spec.KeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 /**
@@ -24,35 +20,21 @@ public class Hashing {
      * @return cadena hasheada
      */
     public String hash(String string) {
-        return hash(string, generateSalt());
-    }
-
-    /**
-     * @param hashedString cadena hasheada
-     * @param string cadena sin hashear
-     * @return true si el hash de string es igual a hashedString
-     */
-    public boolean compare(String hashedString, String string) {
-        String[] hashParts = hashedString.split(":");
-        byte[] salt = Base64.getDecoder().decode(hashParts[0]);
-        return hashedString.equals(hash(string, salt));
-    }
-
-    private String hash(String string, byte[] salt) throws ResponseStatusException {
         try {
-            KeySpec spec = new PBEKeySpec(string.toCharArray(), salt, 65536, 128);
-            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-            byte[] hash = factory.generateSecret(spec).getEncoded();
-            return Base64.getEncoder().encodeToString(salt) + ":" + Base64.getEncoder().encodeToString(hash);
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Server not properly configured", e);
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashedBytes = digest.digest(string.getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(hashedBytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("No se pudo aplicar SHA-256", e);
         }
     }
 
-    private byte[] generateSalt() {
-        SecureRandom random = new SecureRandom();
-        byte[] salt = new byte[16];
-        random.nextBytes(salt);
-        return salt;
+    /**
+     * @param raw     contraseña sin cifrar introducida por el usuario
+     * @param hashed  contraseña ya cifrada guardada en la base de datos
+     * @return true si coinciden, false si no
+     */
+    public boolean check(String raw, String hashed) {
+        return hash(raw).equals(hashed);
     }
 }
